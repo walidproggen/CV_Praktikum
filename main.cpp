@@ -3,6 +3,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "myFunctions.h"
+#include "histogram.h"
 
 using namespace cv;
 using namespace std;
@@ -25,6 +26,8 @@ void myCallBackFunc (int event, int x, int y, int flags, void* userdata) {
 		if (mouseDownCoor.x == x && mouseDownCoor.y == y) { 
 			imshow ("Bild in Farbe", img_untouched); 
 			img_untouched.copyTo(image); 
+			destroyWindow("Submatrix");
+			destroyWindow("histogram");
 			return; 
 		}
 		// else draw a (white) rectangle in specified range
@@ -53,12 +56,15 @@ void myCallBackFunc (int event, int x, int y, int flags, void* userdata) {
 		roi = img_untouched(r).clone();
 		namedWindow ("Submatrix", WINDOW_AUTOSIZE);
 		imshow ("Submatrix", roi);
+
+		// create histogram of submatrix
+		computeHistogram(roi);
 	}
 }
 
 int main () {
 	// read image file
-	image = imread ("testimg.jpg", 1);
+	image = imread ("full.png", 1);
 	if (! image.data) {
 		cout << "Could not open or find the image" << endl;
 		return -1;
