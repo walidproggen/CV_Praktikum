@@ -9,6 +9,7 @@ using namespace cv;
 using namespace std;
 
 Mat image, img_untouched, roi;
+vector<Mat>* histoVec;
 Point mouseDownCoor;	// stores the coordinates of mouse DOWN event
 
 
@@ -35,21 +36,6 @@ void myCallBackFunc (int event, int x, int y, int flags, void* userdata) {
 		rectangle (image, mouseDownCoor, Point(x,y), Scalar(255, 255, 255)); 
 		imshow ("Bild in Farbe", image);
 
-/*		// when x or y coordinate exceed picture/window size, readjust them
-		Size size = img_untouched.size();
-		x = x<0 ? 0:x; x = x<size.width ? x:size.width;
-		y = y<0 ? 0:y; y = y<size.height ? y:size.height;
-		
-		// save mouse coordinates into a range: rangeWidth(x1, x2), rangeHeight(y1,y2)
-		Range rangeWidth(mouseDownCoor.x > x ? x:mouseDownCoor.x, mouseDownCoor.x > x ? mouseDownCoor.x:x);
-		Range rangeHeight(mouseDownCoor.y > y ? y:mouseDownCoor.y, mouseDownCoor.y > y ? mouseDownCoor.y:y);
-
-		cout << "rangeWidth.start = " << rangeWidth.start << "; rangeWidth.end = " << rangeWidth.end << endl;
-		cout << "rangeHeight.start = " << rangeHeight.start << "; rangeHeight.end = " << rangeHeight.end << endl;
-
-		cout << "rangeWidth.size() = " << rangeWidth.size() << endl; 
-		cout << "rangeHeight.size() = " << rangeHeight.size() << endl; */
-
 		Rect r = computeROI(mouseDownCoor, Point(x,y), img_untouched.size());
 
 		// create submatrix and display the subimage
@@ -58,13 +44,16 @@ void myCallBackFunc (int event, int x, int y, int flags, void* userdata) {
 		imshow ("Submatrix", roi);
 
 		// create histogram of submatrix
-		computeHistogram(roi);
+		histoVec = computeHistogram(roi);
+
+		// create relative to ROI Image
+		relativeToROIImage(img_untouched, histoVec, roi.rows*roi.cols);
 	}
 }
 
 int main () {
 	// read image file
-	image = imread ("full.png", 1);
+	image = imread ("testimg2.jpg", 1);
 	if (! image.data) {
 		cout << "Could not open or find the image" << endl;
 		return -1;

@@ -15,6 +15,59 @@ Rect computeROI (Point p1, Point p2, Size imgSize) {
 
 	cout << "rangeWidth.size() = " << rangeWidth.size() << endl; 
 	cout << "rangeHeight.size() = " << rangeHeight.size() << endl; 
+	cout << endl;
 
 	return Rect(rangeWidth.start, rangeHeight.start, rangeWidth.size(), rangeHeight.size());
 }
+
+
+void printMatValues (Mat img) {
+	//Print Matrix Color Values
+	for (int i = 0; i < img.rows; i++) {
+		for (int j = 0; j < img.cols; j++) {
+			cout << "(" << (int)img.at<cv::Vec3b>(i,j)[0];
+			cout << "|" << (int)img.at<cv::Vec3b>(i,j)[1];
+			cout << "|" << (int)img.at<cv::Vec3b>(i,j)[2] << ")" << " ";
+		}
+		cout << endl;
+	}
+}
+
+
+void relativeToROIImage (Mat srcImg, vector<Mat>* histoVecOfROI, int ROISize) {
+	Mat img = srcImg.clone();
+	int b, g , r;
+	float relativeB, relativeG, relativeR;
+	
+	for (int i = 0; i < img.rows; i++) {
+		for (int j = 0; j < img.cols; j++) {
+			// Get the BGR-Values of each pixel
+			b = (int) img.at<Vec3b>(i,j)[0]; 
+			g = (int) img.at<Vec3b>(i,j)[1];
+			r = (int) img.at<Vec3b>(i,j)[2];
+			
+			// calculate index for histogramm-Array
+			b /= 32;
+			g /= 32;
+			r /= 32;
+
+			// calculate relative frequency for specific pixel-value
+			relativeB = (*histoVecOfROI)[0].at<float>(b) / ROISize;
+			relativeG = (*histoVecOfROI)[1].at<float>(g) / ROISize;
+			relativeR = (*histoVecOfROI)[2].at<float>(r) / ROISize;
+
+			// save into new image
+			img.at<Vec3b>(i,j)[0] = (int) 255 * relativeB;
+			img.at<Vec3b>(i,j)[1] = (int) 255 * relativeG;
+			img.at<Vec3b>(i,j)[2] = (int) 255 * relativeR;
+		}
+	}
+
+	// Display
+ 	namedWindow("Relative to ROI Image", CV_WINDOW_AUTOSIZE );
+ 	imshow("Relative to ROI Image", img);
+	
+	waitKey(0);
+}
+			 	 
+			
