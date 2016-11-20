@@ -1,7 +1,7 @@
 #include "histogram.h"
 	
 
-vector<Mat>* computeHistogram (Mat imgSrc) {	
+vector<Mat>* histogram1D (Mat imgSrc) {	
 	// Separate the image in 3 places ( B, G and R )
 	vector<Mat> bgr_planes;
 	split (imgSrc, bgr_planes);
@@ -72,4 +72,53 @@ vector<Mat>* computeHistogram (Mat imgSrc) {
  	imshow("histogram", histImage );
 
 	return histogramVec;
+}
+
+
+void histogram2D (Mat src) {
+	Mat hsv;
+
+    	cvtColor(src, hsv, CV_BGR2HSV);
+
+    	// Quantize the hue to 30 bins
+    	// and the saturation to 32 bins
+    	int hbins = 30, sbins = 32;
+    	int histSize[] = {hbins, sbins};
+
+    	// hue varies from 0 to 179, see cvtColor
+    	float hranges[] = { 0, 180 };
+    	// saturation varies from 0 (black-gray-white) to
+    	// 255 (pure spectrum color)
+   	 float sranges[] = { 0, 256 };
+    	const float* ranges[] = { hranges, sranges };
+
+    	Mat hist;
+
+    	// we compute the histogram from the 0-th and 1-st channels
+    	int channels[] = {0, 1};
+
+    	calcHist( &hsv, 1, channels, Mat(), // do not use mask
+        	hist, 2, histSize, ranges,
+             	true, // the histogram is uniform
+             	false );
+
+	// Get the max value of the Histogram (need it later for procent computing)
+    	double maxVal=0;
+    	minMaxLoc(hist, 0, &maxVal, 0, 0);
+
+    	int scale = 10;
+    	Mat histImg = Mat::zeros(sbins*scale, hbins*scale, CV_8UC3);
+
+    	for( int h = 0; h < hbins; h++ )
+        	for( int s = 0; s < sbins; s++ )
+        	{
+            		float binVal = hist.at<float>(h, s);
+			if (binVal == 0) { continue;} 
+			// maxValue = 100% intensity (100% white)
+            		int intensity = cvRound(binVal/maxVal * 255); 
+            		rectangle( histImg, Point(h*scale, s*scale), Point( (h+1)*scale - 1, (s+1)*scale - 1), Scalar::all(intensity), CV_FILLED );
+        }
+
+    namedWindow( "H-S Histogram", 1 );
+    imshow( "H-S Histogram", histImg );
 }

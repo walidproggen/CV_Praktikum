@@ -5,6 +5,8 @@
 using namespace cv;
 using namespace std;
 
+
 Rect computeROI (Point p1, Point p2, Size imgSize);
 void printMatValues (Mat img);
 void relativeToROIImage (Mat srcImg, vector<Mat>* histoVecOfROI, int ROISize);
+void onMouseCallBack( int event, int x, int y, int, void* userdata);

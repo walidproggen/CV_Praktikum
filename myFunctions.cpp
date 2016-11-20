@@ -1,4 +1,11 @@
 #include "myFunctions.h"
+#include "histogram.h"
+
+bool selectObject;
+Rect selection;
+Point origin;
+Mat image, img_untouched, roi, frame;
+vector<Mat>* histoVec;
 
 
 Rect computeROI (Point p1, Point p2, Size imgSize) { 
@@ -69,5 +76,43 @@ void relativeToROIImage (Mat srcImg, vector<Mat>* histoVecOfROI, int ROISize) {
 	
 	waitKey(0);
 }
+
 			 	 
-			
+void onMouseCallBack( int event, int x, int y, int, void* userdata) {
+    	switch( event )
+    	{
+    	case CV_EVENT_LBUTTONDOWN:
+        	origin = Point(x,y);
+        	break;
+    	case CV_EVENT_LBUTTONUP:
+		if (userdata != NULL) {
+			selection = computeROI (origin, Point (x, y), frame.size());
+        		selectObject = true;
+			return;
+		}
+		// when mouse was not moved and just was clicked (i.e. no rectangle was specified), restore origin picture 
+		if (origin.x == x && origin.y == y) { 
+			imshow ("Bild in Farbe", img_untouched); 
+			img_untouched.copyTo(image); 
+			destroyWindow("Submatrix");
+			destroyWindow("histogram");
+			return; 
+		}
+		// else draw a (white) rectangle in specified range
+		cout << "Left button released at position x: " << x << "and y: " << y << endl;
+		rectangle (image, origin, Point(x,y), Scalar(255, 255, 255)); 
+		imshow ("Bild in Farbe", image);
+
+		Rect r = computeROI(origin, Point(x,y), img_untouched.size());
+
+		// create submatrix
+		roi = img_untouched(r).clone();
+
+		// create histogram of submatrix
+		histoVec = histogram1D(roi);
+
+		// create relative to ROI Image
+		relativeToROIImage(img_untouched, histoVec, roi.rows*roi.cols);
+        	break;
+    	}
+}			

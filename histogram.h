@@ -6,4 +6,5 @@
 using namespace cv;
 using namespace std;
 
-vector<Mat>* computeHistogram (Mat imgSrc);
+vector<Mat>* histogram1D (Mat imgSrc);
+void histogram2D (Mat src);

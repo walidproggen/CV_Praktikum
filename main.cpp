@@ -8,63 +8,63 @@
 using namespace cv;
 using namespace std;
 
-Mat image, img_untouched, roi;
-vector<Mat>* histoVec;
-Point mouseDownCoor;	// stores the coordinates of mouse DOWN event
+
+extern bool selectObject;
+extern Mat image;
+extern Mat img_untouched;
+extern Mat roi;
+extern Mat frame;
+extern Rect selection;
 
 
-void myCallBackFunc (int event, int x, int y, int flags, void* userdata) {
-	// Event occur when left mouse button is down 
-	if (event == EVENT_LBUTTONDOWN) { 
-		cout << "Left button is clicked in position x: " << x << "and y: " << y << endl; 
-		mouseDownCoor.x = x; 
-		mouseDownCoor.y = y; 
-	}
+int main (int argc, char* argv[]) {
+
+	if (argc != 2) { cout << "Usage: Programname + (P2 || P3)" << endl; return 0; }
+	String str = argv[1];
 	
-	// Event occur when left mouse button is released
-	if (event == EVENT_LBUTTONUP) { 
-		// when mouse was not moved and just was clicked (i.e. no rectangle was specified), restore origin picture 
-		if (mouseDownCoor.x == x && mouseDownCoor.y == y) { 
-			imshow ("Bild in Farbe", img_untouched); 
-			img_untouched.copyTo(image); 
-			destroyWindow("Submatrix");
-			destroyWindow("histogram");
-			return; 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+//+++++++++++++++++++++++++++++++++++++++++++++++ Praktikum 3 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+	if (str == "P3") {
+	 	VideoCapture cap("http://192.168.0.10:4747/mjpegfeed?x.mjpeg");
+	 	namedWindow( "Webcam", WINDOW_AUTOSIZE );
+		String userdata = "Ungleich Null";
+	 	setMouseCallback( "Webcam", onMouseCallBack, &userdata );
+
+		for (;;) {
+			cap >> frame;
+			if (frame.empty()) { break; }
+			if( selectObject && selection.width > 0 && selection.height > 0 ) {
+		    		roi = frame(selection);
+				rectangle(frame, selection, Scalar(255,255,255));
+				histogram2D (roi);
+			}
+
+	  		imshow( "Webcam", frame );
+			if ((waitKey(30) % 256) == 27) { break; }
 		}
-		// else draw a (white) rectangle in specified range
-		cout << "Left button released at position x: " << x << "and y: " << y << endl;
-		rectangle (image, mouseDownCoor, Point(x,y), Scalar(255, 255, 255)); 
-		imshow ("Bild in Farbe", image);
+	} 
 
-		Rect r = computeROI(mouseDownCoor, Point(x,y), img_untouched.size());
 
-		// create submatrix and display the subimage
-		roi = img_untouched(r).clone();
-		namedWindow ("Submatrix", WINDOW_AUTOSIZE);
-		imshow ("Submatrix", roi);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+//+++++++++++++++++++++++++++++++++++++++++++++++ Praktikum 2 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
+	else if (str == "P2") {
+		// read image file
+		image = imread ("testimg2.jpg", 1);
+		if (! image.data) {
+			cout << "Could not open or find the image" << endl;
+			return -1;
+		}
+		image.copyTo(img_untouched);
 
-		// create histogram of submatrix
-		histoVec = computeHistogram(roi);
+		// create window, display image in window and set callback
+		namedWindow ("Bild in Farbe", WINDOW_AUTOSIZE); // Create a windows for display
+		setMouseCallback("Bild in Farbe", onMouseCallBack, NULL);	//set mouse callback for specified window
+		imshow ("Bild in Farbe", image); // Show our image inside it
 
-		// create relative to ROI Image
-		relativeToROIImage(img_untouched, histoVec, roi.rows*roi.cols);
+		waitKey(0);
 	}
-}
 
-int main () {
-	// read image file
-	image = imread ("testimg2.jpg", 1);
-	if (! image.data) {
-		cout << "Could not open or find the image" << endl;
-		return -1;
-	}
-	image.copyTo(img_untouched);
-
-	// create window, display image in window and set callback
-	namedWindow ("Bild in Farbe", WINDOW_AUTOSIZE); // Create a windows for display
-	setMouseCallback("Bild in Farbe", myCallBackFunc, NULL);	//set mouse callback for specified window
-	imshow ("Bild in Farbe", image); // Show our image inside it
-
-	waitKey(0);
 	return(0);
 }
