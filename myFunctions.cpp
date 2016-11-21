@@ -6,6 +6,8 @@ Rect selection;
 Point origin;
 Mat image, img_untouched, roi, frame;
 vector<Mat>* histoVec;
+Mat hist, hsv_roi, hsv_frame, backProj, hue_roi;
+bool boolhist = false;
 
 
 Rect computeROI (Point p1, Point p2, Size imgSize) { 
@@ -119,27 +121,26 @@ void onMouseCallBack( int event, int x, int y, int, void* userdata) {
 
 
 void trackObjectinROI () {
-	Mat hist, hsv_roi, hsv_frame, backProj, hue_roi;
-	
-	cvtColor( roi, hsv_roi, CV_BGR2HSV );	
 
-  /// Use only the Hue value
-  hue_roi.create( hsv_roi.size(), hsv_roi.depth() );
-  int ch[] = { 0, 0 };
-  mixChannels( &hsv_roi, 1, &hue_roi, 1, ch, 1 );
+	  	float h_range[] = { 0, 179 };
+	  	float s_range[] = { 0, 255 };
+	  	const float* ranges[] = { h_range, s_range};
 
-	int h_bins = 180; int s_bins = 32;
-  	int histSize[] = { h_bins, s_bins};
+	  	int channels[] = { 0, 1 };
 
-  	float h_range[] = { 0, 179 };
-  	float s_range[] = { 0, 255 };
-  	const float* ranges[] = { h_range, s_range};
+	if (boolhist == false) {
+		cvtColor( roi, hsv_roi, CV_BGR2HSV );	
 
-  	int channels[] = { 0, 1 };
+		int h_bins = 180; int s_bins = 32;
+	  	int histSize[] = { h_bins, s_bins};
 
-  	/// Get the Histogram and normalize it
-  	calcHist( &hsv_roi, 1, channels, Mat(), hist, 2, histSize, ranges, true, false );
-	normalize( hist, hist, 0, 255, NORM_MINMAX, -1, Mat() );
+
+	  	/// Get the Histogram and normalize it
+	  	calcHist( &hsv_roi, 1, channels, Mat(), hist, 2, histSize, ranges, true, false );
+		normalize( hist, hist, 0, 255, NORM_MINMAX, -1, Mat() );
+	}
+
+	boolhist = true;
 
 	TermCriteria criteria = TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 25, 1 );
 
