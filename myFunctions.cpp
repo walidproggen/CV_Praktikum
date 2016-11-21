@@ -115,4 +115,75 @@ void onMouseCallBack( int event, int x, int y, int, void* userdata) {
 		relativeToROIImage(img_untouched, histoVec, roi.rows*roi.cols);
         	break;
     	}
-}			
+}	
+
+
+void trackObjectinROI () {
+	Mat hist, hsv_roi, hsv_frame, backProj, hue_roi;
+	
+	cvtColor( roi, hsv_roi, CV_BGR2HSV );	
+
+  /// Use only the Hue value
+  hue_roi.create( hsv_roi.size(), hsv_roi.depth() );
+  int ch[] = { 0, 0 };
+  mixChannels( &hsv_roi, 1, &hue_roi, 1, ch, 1 );
+
+	int h_bins = 180; int s_bins = 32;
+  	int histSize[] = { h_bins, s_bins};
+
+  	float h_range[] = { 0, 179 };
+  	float s_range[] = { 0, 255 };
+  	const float* ranges[] = { h_range, s_range};
+
+  	int channels[] = { 0, 1 };
+
+  	/// Get the Histogram and normalize it
+  	calcHist( &hsv_roi, 1, channels, Mat(), hist, 2, histSize, ranges, true, false );
+	normalize( hist, hist, 0, 255, NORM_MINMAX, -1, Mat() );
+
+	TermCriteria criteria = TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 25, 1 );
+
+	cvtColor(frame, hsv_frame, CV_BGR2HSV); 
+  	calcBackProject( &hsv_frame, 1, channels, hist, backProj, ranges, 1, true );
+
+/*	cout << "Selection before meanshift (x, y, width, height) = ";
+	cout << "(" << selection.x << ", ";
+	cout << selection.y << ", ";
+	cout << selection.width << ", ";
+	cout << selection.y << ")" << endl; */
+
+	meanShift(backProj, selection, criteria);
+	rectangle(frame, selection, Scalar(255,255,255));
+
+/*	cout << "Selection AFTER meanshift (x, y, width, height) = ";
+	cout << "(" << selection.x << ", ";
+	cout << selection.y << ", ";
+	cout << selection.width << ", ";
+	cout << selection.y << ")" << endl;*/
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		

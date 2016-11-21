@@ -19,7 +19,7 @@ extern Rect selection;
 
 int main (int argc, char* argv[]) {
 
-	if (argc != 2) { cout << "Usage: Programname + (P2 || P3)" << endl; return 0; }
+	if (argc < 2) { cout << "Usage: Programname + (P2 || P3 [A7]?)" << endl; return 0; }
 	String str = argv[1];
 	
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
@@ -30,18 +30,20 @@ int main (int argc, char* argv[]) {
 	 	namedWindow( "Webcam", WINDOW_AUTOSIZE );
 		String userdata = "Ungleich Null";
 	 	setMouseCallback( "Webcam", onMouseCallBack, &userdata );
+		Mat hist, frame_hsv, backProj; 
+
 
 		for (;;) {
 			cap >> frame;
 			if (frame.empty()) { break; }
 			if( selectObject && selection.width > 0 && selection.height > 0 ) {
 		    		roi = frame(selection);
-				rectangle(frame, selection, Scalar(255,255,255));
-				histogram2D (roi);
+				//histogram2D (roi);
+				trackObjectinROI ();
 			}
-
+			
 	  		imshow( "Webcam", frame );
-			if ((waitKey(30) % 256) == 27) { break; }
+			if ((waitKey(5) % 256) == 27) { break; }
 		}
 	} 
 
@@ -51,7 +53,7 @@ int main (int argc, char* argv[]) {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 	else if (str == "P2") {
 		// read image file
-		image = imread ("testimg2.jpg", 1);
+		image = imread ("full.png", 1);
 		if (! image.data) {
 			cout << "Could not open or find the image" << endl;
 			return -1;
