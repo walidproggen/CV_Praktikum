@@ -1,5 +1,6 @@
 #include "myFunctions.h"
 #include "histogram.h"
+#include <algorithm>
 
 
 Rect selection;
@@ -153,20 +154,51 @@ void trackObject () {
 
 	imshow ("CalcBack", backProj);
 
+	// meanshift
 	meanShift(backProj, selection, criteria);
 	rectangle(frame, selection, Scalar(255,255,255));
+
+	// CamShift
+/*	RotatedRect trackBox = CamShift(backProj, selection, criteria);
+ 	ellipse( frame, trackBox, Scalar(255,255,255));
+	cout << "area size of Tracking window: " << selection.area() << endl;
+        if( selection.area() <= 2 ) {
+                selection = Rect(selection.x, selection.y, frame.rows*0.1, frame.cols*0.1);
+		cout << "innerhalb if: " << selection.area() << endl;
+        }*/
 }
 
 
 void histogram3D () {	
 	// define bins for hist
-	int histSize[] = { *hBin, *sBin, *vBin};
+	int histSize[] = { *hBin, *sBin, *vBin };
 
 	/// calculate the Histogram and normalize it
 	cvtColor( roi, hsv_roi, CV_BGR2HSV );	
 	calcHist( &hsv_roi, 1, channels, Mat(), hist, 3, histSize, ranges, true, false );
 			
-	normalize( hist, hist, 255, 0, NORM_L2, -1, Mat() );
+//	normalize( hist, hist, 255, 0, NORM_L2, -1, Mat() );
+	float maxValue = 0.f;
+
+	// manual Normalize similar to cv::normalize with NORM_MINMAX
+	// NORM_MINMAX (minMaxLoc) cant handle Dimensions > 2
+	// thats why we do it manually
+	for (int h = 0; h < *hBin; h++) {
+		for (int s = 0; s < *sBin; s++) {
+			for (int v = 0; v < *vBin; v++) {
+				float tmp = hist.at<float>(h, s, v);
+				maxValue = std::max(maxValue, tmp);
+			}
+		}
+	}
+	cout << "MAXVALUE: " << maxValue << endl;
+	for (int h = 0; h < *hBin; h++) {
+		for (int s = 0; s < *sBin; s++) {
+			for (int v = 0; v < *vBin; v++) {
+			hist.at<float>(h, s, v) = hist.at<float>(h, s, v) / maxValue * 255; 
+			}
+		}
+	}
 }
 
 

@@ -27,7 +27,8 @@ int main (int argc, char* argv[]) {
 //+++++++++++++++++++++++++++++++++++++++++++++++ Praktikum 3 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 	if (str == "A6" || (str == "A7")) {
-	 	VideoCapture cap("http://192.168.0.10:4747/mjpegfeed?x.mjpeg");
+	 	//VideoCapture cap("http://192.168.0.10:4747/mjpegfeed?x.mjpeg");
+	 	VideoCapture cap(0);
 	 	namedWindow( "Webcam", WINDOW_AUTOSIZE );
 		String userdata = "Ungleich Null";
 	 	setMouseCallback( "Webcam", onMouseCallBack, &userdata );
@@ -37,9 +38,11 @@ int main (int argc, char* argv[]) {
 
 		for (;;) {
 			cap >> frame;
+			flip(frame, frame, 1);
 			if (frame.empty()) { break; }
 			if( selectObject && selection.width > 0 && selection.height > 0 ) {
 				//histogram2D (roi);
+				//rectangle(frame, selection, Scalar(255,255,255));
 				trackObject ();
 			}
 	  		imshow( "Webcam", frame );

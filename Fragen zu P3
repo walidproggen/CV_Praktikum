@@ -1,0 +1,25 @@
+Was ist der Vorteil von HSV gegenüber RGB?
+	=> Für den Menschen intuitiver
+	=> Mithilfe von HSV kann man z.b. Schatten rausrechnen (Value) oder Helligkeit (saturation)
+	   und auschließlich sich auf die Farbe (Hue) konzentrieren
+
+Wie wird RGB zu HSV umgerechnet?
+	=> siehe opencv doc unter cvtColor
+
+Wie sieht das HSV Modell aus? 
+	=> https://goo.gl/ATCvue
+
+
+Erläuterung der Methoden:
+1) calcBackProj:
+		Man wähle ein ROI aus und berechne das dazugehörige Histogram. Diese dient nun als Referenz.
+		Man nehme dann ein Testbild und calcBackProj schaut welche Teile des Bildes mit der Referenz (Histogram vom ROI)
+		zusammenpassen. Sprich Merkmalsextraktion.
+
+2) MeanShift: 
+		Gegebn sei Bild. Im Bild stellen wir uns einen kleinen Kreis vor. Der Kreis rechnet nun aus, wo sich innerhalb sein Radius
+		die höchste Anzahl von Pixeln befindet (Dichte) und bewegt seinen Mittelpunkt dahin. Dies wird so lange getan, bis man die Region im Bild 
+		mit der höchsten Pixeldichte erreicht hat.
+
+CamShift:
+		Das selbe wie meanshift außer das sich der ROI geometrisch anpasst
