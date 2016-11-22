@@ -15,35 +15,35 @@ extern Mat img_untouched;
 extern Mat roi;
 extern Mat frame;
 extern Rect selection;
+extern int *hBin, *sBin, *vBin;
 
 
 int main (int argc, char* argv[]) {
 
-	if (argc < 2) { cout << "Usage: Programname + (P2 || P3 [A7]?)" << endl; return 0; }
+	if (argc != 2) { cout << "Usage: Programname + (A5 || A6 || A7)" << endl; return 0; }
 	String str = argv[1];
 	
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 //+++++++++++++++++++++++++++++++++++++++++++++++ Praktikum 3 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
-	if (str == "P3") {
+	if (str == "A6" || (str == "A7")) {
 	 	VideoCapture cap("http://192.168.0.10:4747/mjpegfeed?x.mjpeg");
 	 	namedWindow( "Webcam", WINDOW_AUTOSIZE );
 		String userdata = "Ungleich Null";
 	 	setMouseCallback( "Webcam", onMouseCallBack, &userdata );
-		Mat hist, frame_hsv, backProj; 
-
+		createTrackbar("Hue", "Webcam", hBin, 180, onTrackBar);
+		createTrackbar("Saturation", "Webcam", sBin, 256, onTrackBar);
+		createTrackbar("Value", "Webcam", vBin, 256, onTrackBar);
 
 		for (;;) {
 			cap >> frame;
 			if (frame.empty()) { break; }
 			if( selectObject && selection.width > 0 && selection.height > 0 ) {
-		    		roi = frame(selection);
 				//histogram2D (roi);
-				trackObjectinROI ();
+				trackObject ();
 			}
-			
 	  		imshow( "Webcam", frame );
-			if ((waitKey(5) % 256) == 27) { break; }
+			if ((waitKey(10) % 256) == 27) { break; }
 		}
 	} 
 
@@ -51,7 +51,7 @@ int main (int argc, char* argv[]) {
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 //+++++++++++++++++++++++++++++++++++++++++++++++ Praktikum 2 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++// 
-	else if (str == "P2") {
+	else if (str == "A5" || str == "A4") {
 		// read image file
 		image = imread ("full.png", 1);
 		if (! image.data) {

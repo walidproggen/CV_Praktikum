@@ -1,13 +1,28 @@
 #include "myFunctions.h"
 #include "histogram.h"
 
-bool selectObject;
+
 Rect selection;
 Point origin;
-Mat image, img_untouched, roi, frame;
+Mat image, img_untouched;	// fuer Praktikum 2 
+Mat hist, roi;
+Mat frame, hsv_roi, hsv_frame, backProj;	// Fuer Praktikum 3
 vector<Mat>* histoVec;
-Mat hist, hsv_roi, hsv_frame, backProj, hue_roi;
-bool boolhist = false;
+bool selectObject = false;
+
+// Test different normalize functions
+Mat backProj2;
+
+// define ranges and channels for hist
+float h_range[] = { 0, 180 };
+float s_range[] = { 0, 256 };
+float v_range[] = { 0, 256 };
+	
+	
+const float* ranges[] = { h_range, s_range, v_range };
+int channels[] = { 0, 1, 2 };
+int hBinInit = 30, sBinInit = 32, vBinInit = 1;
+int *hBin = &hBinInit, *sBin = &sBinInit, *vBin = &vBinInit;
 
 
 Rect computeROI (Point p1, Point p2, Size imgSize) { 
@@ -60,6 +75,13 @@ void relativeToROIImage (Mat srcImg, vector<Mat>* histoVecOfROI, int ROISize) {
 			g /= 32;
 			r /= 32;
 
+/*			// calculate Max Value in each channel
+			double bMax, gMax, rMax;
+			minMaxLoc((*histoVecOfROI)[0], 0, &bMax, 0, 0);
+			minMaxLoc((*histoVecOfROI)[1], 0, &gMax, 0, 0);
+			minMaxLoc((*histoVecOfROI)[2], 0, &rMax, 0, 0);
+*/
+
 			// calculate relative frequency for specific pixel-value
 			relativeB = (*histoVecOfROI)[0].at<float>(b) / ROISize;
 			relativeG = (*histoVecOfROI)[1].at<float>(g) / ROISize;
@@ -88,16 +110,19 @@ void onMouseCallBack( int event, int x, int y, int, void* userdata) {
         	break;
     	case CV_EVENT_LBUTTONUP:
 		if (userdata != NULL) {
+			// calculate roi
 			selection = computeROI (origin, Point (x, y), frame.size());
+			roi = frame(selection);
+			histogram3D();
         		selectObject = true;
 			return;
 		}
 		// when mouse was not moved and just was clicked (i.e. no rectangle was specified), restore origin picture 
 		if (origin.x == x && origin.y == y) { 
-			imshow ("Bild in Farbe", img_untouched); 
-			img_untouched.copyTo(image); 
-			destroyWindow("Submatrix");
-			destroyWindow("histogram");
+			img_untouched.copyTo(image);
+			imshow ("Bild in Farbe", image);  
+			destroyWindow("Histogram A4");
+			destroyWindow("Histogram A5");
 			return; 
 		}
 		// else draw a (white) rectangle in specified range
@@ -108,7 +133,7 @@ void onMouseCallBack( int event, int x, int y, int, void* userdata) {
 		Rect r = computeROI(origin, Point(x,y), img_untouched.size());
 
 		// create submatrix
-		roi = img_untouched(r).clone();
+		roi = img_untouched(r);
 
 		// create histogram of submatrix
 		histoVec = histogram1D(roi);
@@ -120,53 +145,35 @@ void onMouseCallBack( int event, int x, int y, int, void* userdata) {
 }	
 
 
-void trackObjectinROI () {
-
-	  	float h_range[] = { 0, 179 };
-	  	float s_range[] = { 0, 255 };
-	  	const float* ranges[] = { h_range, s_range};
-
-	  	int channels[] = { 0, 1 };
-
-	if (boolhist == false) {
-		cvtColor( roi, hsv_roi, CV_BGR2HSV );	
-
-		int h_bins = 180; int s_bins = 32;
-	  	int histSize[] = { h_bins, s_bins};
-
-
-	  	/// Get the Histogram and normalize it
-	  	calcHist( &hsv_roi, 1, channels, Mat(), hist, 2, histSize, ranges, true, false );
-		normalize( hist, hist, 0, 255, NORM_MINMAX, -1, Mat() );
-	}
-
-	boolhist = true;
-
-	TermCriteria criteria = TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 25, 1 );
+void trackObject () {
+	TermCriteria criteria = TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 10, 1 );
 
 	cvtColor(frame, hsv_frame, CV_BGR2HSV); 
   	calcBackProject( &hsv_frame, 1, channels, hist, backProj, ranges, 1, true );
 
-/*	cout << "Selection before meanshift (x, y, width, height) = ";
-	cout << "(" << selection.x << ", ";
-	cout << selection.y << ", ";
-	cout << selection.width << ", ";
-	cout << selection.y << ")" << endl; */
+	imshow ("CalcBack", backProj);
 
 	meanShift(backProj, selection, criteria);
 	rectangle(frame, selection, Scalar(255,255,255));
-
-/*	cout << "Selection AFTER meanshift (x, y, width, height) = ";
-	cout << "(" << selection.x << ", ";
-	cout << selection.y << ", ";
-	cout << selection.width << ", ";
-	cout << selection.y << ")" << endl;*/
-
 }
 
 
+void histogram3D () {	
+	// define bins for hist
+	int histSize[] = { *hBin, *sBin, *vBin};
+
+	/// calculate the Histogram and normalize it
+	cvtColor( roi, hsv_roi, CV_BGR2HSV );	
+	calcHist( &hsv_roi, 1, channels, Mat(), hist, 3, histSize, ranges, true, false );
+			
+	normalize( hist, hist, 255, 0, NORM_L2, -1, Mat() );
+}
 
 
+void onTrackBar(int,void*) {
+	if (*hBin == 0 || *sBin == 0 || *vBin == 0) { return; }
+	histogram3D ();
+}
 
 
 
